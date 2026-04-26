@@ -33,7 +33,7 @@ jobs:
 
       - name: Initialize & Build Android
         run: |
-          npx cap init "King Shops" "com.kingshops.game" --web-dir www
+          npx cap init "Stroop" "com.Stroop.game" --web-dir www
           npx cap add android
           
           # تفعيل الضغط لتقليل الحجم
