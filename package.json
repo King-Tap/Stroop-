@@ -1,7 +1,7 @@
 {
   "name": "spend-billions-app",
   "version": "1.0.0",
-  "description": "لعبة إنفاق ثروة العمالقة",
+  "description": "Stroop",
   "main": "index.js",
   "dependencies": {
     "@capacitor/android": "^5.0.0",
