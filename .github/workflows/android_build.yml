@@ -65,5 +65,5 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: King-Shops-Fixed
+          name: Stroop-Fixed
           path: android/app/build/outputs/apk/debug/app-debug.apk
