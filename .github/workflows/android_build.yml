@@ -40,27 +40,20 @@ jobs:
           sed -i 's/minifyEnabled false/minifyEnabled true/' android/app/build.gradle
           sed -i 's/shrinkResources false/shrinkResources true/' android/app/build.gradle
 
-      - name: Apply Custom Icon
+      - name: Wipe Default Icons
         run: |
-          # التحقق من وجود الملف في المجلد الرئيسي ثم استبدال الأيقونات الافتراضية
-          if [ -f "icon.png" ]; then
-            echo "Icon found, applying to all mipmap folders..."
-            
-            # حذف الأيقونات الافتراضية
-            find android/app/src/main/res/mipmap-* -name "ic_launcher*.png" -delete
-            find android/app/src/main/res/mipmap-* -name "ic_launcher_round.png" -delete
-            
-            # نسخ ملفك الخاص إلى جميع المجلدات
-            for dir in android/app/src/main/res/mipmap-*; do
-              cp icon.png "$dir/ic_launcher.png"
-              cp icon.png "$dir/ic_launcher_round.png"
-            done
-            
-            echo "Icons applied successfully."
-          else
-            echo "Error: icon.png not found in root directory!"
-            exit 1
-          fi
+          # حذف كل ملفات الأيقونات الافتراضية (الروبوت الأخضر وكل ملحقاته)
+          find android/app/src/main/res/mipmap-* -name "ic_launcher*" -delete
+          find android/app/src/main/res/values* -name "ic_launcher*" -delete
+
+          # هنا تم التعديل: نسخ ملف icon.png الخاص بك بدلاً من إنشاء أيقونة جديدة
+          cp icon.png icon_fix.png
+
+          # توزيع الأيقونة الجديدة على كل المجلدات
+          for dir in android/app/src/main/res/mipmap-*; do
+            cp icon_fix.png "$dir/ic_launcher.png"
+            cp icon_fix.png "$dir/ic_launcher_round.png"
+          done
 
       - name: Build APK
         run: |
