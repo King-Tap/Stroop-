@@ -1,69 +1,21 @@
-name: Final Build Success
-on:
-  push:
-    branches: [ main ]
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Set up Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'zulu'
-          java-version: '17'
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - name: Install Ionic & Capacitor
+      - name: Apply Custom Icon
         run: |
-          npm install -g @ionic/cli
-          npm install @capacitor/core @capacitor/cli @capacitor/android
-
-      - name: Create Web Assets
-        run: |
-          mkdir -p www
-          cp index.html www/
-
-      - name: Initialize & Build Android
-        run: |
-          npx cap init "Stroop" "com.Stroop.game" --web-dir www
-          npx cap add android
-          
-          # تفعيل الضغط لتقليل الحجم
-          sed -i 's/minifyEnabled false/minifyEnabled true/' android/app/build.gradle
-          sed -i 's/shrinkResources false/shrinkResources true/' android/app/build.gradle
-
-      - name: Wipe Default Icons
-        run: |
-          # حذف كل ملفات الأيقونات الافتراضية (الروبوت الأخضر وكل ملحقاته)
-          find android/app/src/main/res/mipmap-* -name "ic_launcher*" -delete
-          find android/app/src/main/res/values* -name "ic_launcher*" -delete
-
-          # إنشاء أيقونة بلون سادة (أسود) برمجياً لتكون هي الأيقونة الجديدة
-          # هذا الأمر ينشئ ملف PNG بسيط جداً
-          printf '\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x10\x00\x00\x00\x10\x08\x02\x00\x00\x00\x90\x91\xf3\x1f\x00\x00\x00\x0cIDATx\x9cc\xf8\xff\xff?\x00\x05\xfe\x02\xfe\xdc\x44\x74\xed\x00\x00\x00\x00IEND\xaeB`\x82' > icon_fix.png
-
-          # توزيع الأيقونة الجديدة على كل المجلدات
-          for dir in android/app/src/main/res/mipmap-*; do
-            cp icon_fix.png "$dir/ic_launcher.png"
-            cp icon_fix.png "$dir/ic_launcher_round.png"
-          done
-
-      - name: Build APK
-        run: |
-          cd android
-          chmod +x gradlew
-          ./gradlew assembleDebug
-
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: Stroop-Fixed
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          # التأكد من وجود الملف في المجلد الرئيسي
+          if [ -f "icon.png" ]; then
+            echo "Icon found, applying to all mipmap folders..."
+            
+            # حذف الأيقونات الافتراضية
+            find android/app/src/main/res/mipmap-* -name "ic_launcher*.png" -delete
+            find android/app/src/main/res/mipmap-* -name "ic_launcher_round.png" -delete
+            
+            # نسخ الملف المخصص إلى جميع مجلدات mipmap الموجودة
+            for dir in android/app/src/main/res/mipmap-*; do
+              cp icon.png "$dir/ic_launcher.png"
+              cp icon.png "$dir/ic_launcher_round.png"
+            done
+            
+            echo "Icons applied successfully."
+          else
+            echo "Error: icon.png not found in root directory!"
+            exit 1
+          fi
