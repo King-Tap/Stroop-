@@ -1,6 +1,48 @@
+name: Final Build Success
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Ionic & Capacitor
+        run: |
+          npm install -g @ionic/cli
+          npm install @capacitor/core @capacitor/cli @capacitor/android
+
+      - name: Create Web Assets
+        run: |
+          mkdir -p www
+          cp index.html www/
+
+      - name: Initialize & Build Android
+        run: |
+          npx cap init "Stroop" "com.Stroop.game" --web-dir www
+          npx cap add android
+          
+          # تفعيل الضغط لتقليل الحجم
+          sed -i 's/minifyEnabled false/minifyEnabled true/' android/app/build.gradle
+          sed -i 's/shrinkResources false/shrinkResources true/' android/app/build.gradle
+
       - name: Apply Custom Icon
         run: |
-          # التأكد من وجود الملف في المجلد الرئيسي
+          # التحقق من وجود الملف في المجلد الرئيسي ثم استبدال الأيقونات الافتراضية
           if [ -f "icon.png" ]; then
             echo "Icon found, applying to all mipmap folders..."
             
@@ -8,7 +50,7 @@
             find android/app/src/main/res/mipmap-* -name "ic_launcher*.png" -delete
             find android/app/src/main/res/mipmap-* -name "ic_launcher_round.png" -delete
             
-            # نسخ الملف المخصص إلى جميع مجلدات mipmap الموجودة
+            # نسخ ملفك الخاص إلى جميع المجلدات
             for dir in android/app/src/main/res/mipmap-*; do
               cp icon.png "$dir/ic_launcher.png"
               cp icon.png "$dir/ic_launcher_round.png"
@@ -19,3 +61,15 @@
             echo "Error: icon.png not found in root directory!"
             exit 1
           fi
+
+      - name: Build APK
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Stroop-Fixed
+          path: android/app/build/outputs/apk/debug/app-debug.apk
